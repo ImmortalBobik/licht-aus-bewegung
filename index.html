@@ -1,0 +1,740 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Licht aus Bewegung</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one 1920x1080 stage, scaled to fit, slides stacked and cross-faded; canvas scenes inside */
+:root {
+  --bg1: #0E1220; --bg2: #151B2D; --amber: #FFB547; --cyan: #4FD1E8;
+  --text: #F3F1EA; --mute: #B8C1D6; --mute2: #7D879E; --frame: #07090F;
+  --font: Arial, "Helvetica Neue", Helvetica, sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { margin: 0; background: var(--frame); color: var(--text); font-family: var(--font); overflow: hidden; }
+#viewport { position: relative; height: 100%; box-sizing: border-box;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0; }
+#viewport:fullscreen { padding: 0; }
+#frame { position: relative; width: 100%; height: 100%; }
+#stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 0 0; overflow: hidden; cursor: pointer; background: var(--bg1); }
+.slide { position: absolute; inset: 0; opacity: 0; visibility: hidden; transition: opacity .5s ease, visibility 0s linear .5s; }
+.slide.on { opacity: 1; visibility: visible; transition: opacity .5s ease; }
+.slide.b1 { background: var(--bg1); } .slide.b2 { background: var(--bg2); } .slide.amber { background: var(--amber); color: var(--bg1); }
+.slide > * { position: absolute; margin: 0; }
+h1 { left: 100px; top: 64px; font-size: 80px; font-weight: 700; letter-spacing: -0.5px; }
+canvas.scene { display: block; }
+.notes { display: none; }
+.f { opacity: 0; transform: translateY(14px); transition: opacity .45s ease, transform .45s ease; }
+.f.in { opacity: 1; transform: none; }
+.mute { color: var(--mute); } .amb { color: var(--amber); } .cy { color: var(--cyan); } .grey { color: var(--mute2); }
+b { font-weight: 700; }
+
+/* title + thanks */
+.center { left: 120px; right: 120px; text-align: center; }
+.t-hero { top: 360px; font-size: 136px; font-weight: 700; letter-spacing: -2px; }
+.t-sub { top: 580px; font-size: 56px; color: var(--mute); }
+/* slide 2 */
+.big { left: 180px; font-size: 144px; font-weight: 700; letter-spacing: -2px; line-height: 1; }
+.ask { left: 180px; top: 790px; font-size: 72px; }
+/* faraday text */
+.lt { left: 100px; width: 780px; font-size: 56px; line-height: 1.2; }
+.lt.k { font-size: 64px; font-weight: 700; }
+/* three-step captions */
+.steps3 { left: 100px; right: 100px; top: 890px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px; font-size: 44px; line-height: 1.25; }
+.steps3 span { display: block; }
+.steps3 em { font-style: normal; color: var(--amber); font-weight: 700; margin-right: 14px; }
+.lines2 { left: 100px; right: 100px; font-size: 48px; }
+.lines2 em { font-style: normal; color: var(--amber); font-weight: 700; margin-right: 18px; }
+/* chain */
+.chain { left: 60px; right: 60px; top: 380px; display: flex; justify-content: center; align-items: flex-start; }
+.chain .w { width: 360px; text-align: center; }
+.chain .w b { display: block; font-size: 76px; }
+.chain .w span { display: block; margin-top: 18px; font-size: 40px; color: var(--mute); }
+.chain .ar { width: 110px; text-align: center; font-size: 72px; color: var(--mute2); line-height: 88px; }
+.chain .grp { display: flex; }
+.claim { left: 120px; right: 120px; top: 760px; text-align: center; font-size: 60px; }
+/* formula */
+.formula { left: 0; right: 0; top: 200px; text-align: center; font-size: 132px; font-weight: 700; color: var(--cyan); letter-spacing: 2px; }
+.sym { left: 300px; width: 1320px; display: grid; grid-template-columns: 180px 1fr; align-items: baseline; font-size: 54px; }
+.sym b { color: var(--cyan); font-size: 62px; }
+.rule { left: 80px; right: 80px; top: 900px; text-align: center; font-size: 58px; font-weight: 700; color: var(--amber); }
+/* stats */
+.stats { left: 80px; right: 80px; top: 330px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; text-align: center; }
+.stats b { display: block; font-size: 176px; line-height: 1; letter-spacing: -3px; font-variant-numeric: tabular-nums; }
+.stats span { display: block; margin-top: 36px; font-size: 48px; color: var(--mute); line-height: 1.25; }
+/* timeline */
+.tl { left: 140px; right: 140px; height: 2px; background: var(--mute2); opacity: .55; }
+.ev { width: 520px; text-align: center; }
+.ev i { display: block; margin: 0 auto 30px; width: 28px; height: 28px; border-radius: 50%; background: var(--amber); transform: translateY(-14px); }
+.ev b { display: block; font-size: 92px; }
+.ev span { display: block; margin-top: 10px; font-size: 44px; color: var(--mute); }
+.ev.hl i { background: var(--cyan); } .ev.hl b, .ev.hl span { color: var(--cyan); }
+/* sources */
+.src { left: 100px; right: 100px; top: 210px; font-size: 29px; line-height: 1.38; color: var(--mute); display: grid; gap: 16px; }
+.src a { color: var(--mute); text-decoration: underline; text-decoration-color: rgba(184,193,214,.35); text-underline-offset: 4px; word-break: break-all; }
+.src i { color: var(--text); }
+.foot { left: 100px; bottom: 60px; font-size: 28px; color: var(--mute2); }
+
+/* controls */
+#ui { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; align-items: center;
+  opacity: 0; transition: opacity .3s; z-index: 5; }
+#ui.show, #ui:focus-within { opacity: 1; }
+#ui button { font: 600 14px var(--font); color: var(--text); background: rgba(21,27,45,.9); border: 1px solid rgba(184,193,214,.25); border-radius: 6px; padding: 8px 12px; cursor: pointer; }
+#ui button:hover { border-color: var(--mute); }
+#ui button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+#count { font: 600 14px var(--font); color: var(--mute); min-width: 56px; text-align: center; font-variant-numeric: tabular-nums; }
+#notesPanel { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  max-height: 42%; overflow: auto; background: rgba(11,14,24,.96); border: 1px solid rgba(184,193,214,.2); border-radius: 8px; padding: 18px 22px; font-size: 17px; line-height: 1.5; color: var(--text); white-space: pre-line; z-index: 6; }
+#notesPanel h2 { margin: 0 0 8px; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--amber); }
+#hint { position: absolute; left: 50%; top: 18px; transform: translateX(-50%); font: 14px var(--font); color: var(--mute); background: rgba(11,14,24,.9); padding: 8px 14px; border-radius: 6px; z-index: 6; transition: opacity .6s; pointer-events: none; text-align: center; max-width: calc(100% - 40px); }
+@media (prefers-reduced-motion: reduce) { .f, .slide { transition: none; } }
+</style>
+
+<div id="viewport">
+<div id="frame">
+<div id="stage">
+
+<!-- 1 -->
+<section class="slide b1">
+  <div class="center t-hero">Licht aus Bewegung</div>
+  <div class="center t-sub">Aufbau und Vorgänge in einer Schütteltaschenlampe</div>
+  <aside class="notes">Echte Schüttellampe mitbringen. Ganz am Anfang wortlos schütteln, bis sie leuchtet, und erst dann anfangen zu reden.
+
+Überleitung: Heute zeige ich euch, wie aus Schütteln Licht wird.</aside>
+</section>
+
+<!-- 2 -->
+<section class="slide amber">
+  <div class="big f" style="top:150px">Keine Batterie.</div>
+  <div class="big f" style="top:340px">Kein Kabel.</div>
+  <div class="big f" style="top:530px">Nur Schütteln.</div>
+  <div class="ask f">Wie kann das funktionieren?</div>
+  <aside class="notes">Klick 1 bis 3: die drei Zeilen. Klick 4: die Frage.
+
+Klasse fragen: Wo kommt die Energie her? Ein paar Antworten sammeln.
+Auflösung: aus der Armbewegung. Das Schütteln selbst ist die Energiequelle.</aside>
+</section>
+
+<!-- 3 -->
+<section class="slide b2">
+  <h1>1831: Michael Faraday</h1>
+  <canvas class="scene" data-scene="faraday" width="980" height="840" style="left:900px;top:210px"></canvas>
+  <div class="lt f" style="top:300px">Magnet bewegt sich:</div>
+  <div class="lt k amb f" style="top:372px">Es fließt Strom.</div>
+  <div class="lt f" style="top:520px">Magnet steht still:</div>
+  <div class="lt k grey f" style="top:592px">Kein Strom.</div>
+  <div class="lt f" style="top:770px">Das nennt man <b class="amb">Induktion</b>.</div>
+  <aside class="notes">Die Animation rechts läuft von selbst: Der Magnet fährt in die Spule hinein und wieder heraus. Die hellblauen Linien zeigen sein Magnetfeld.
+
+Auf den Zeiger zeigen: Er schlägt nur aus, solange sich der Magnet bewegt. Rein: nach rechts. Raus: nach links. Am Umkehrpunkt steht der Magnet kurz still, dann fällt der Zeiger auf null zurück. Die Spule färbt sich, und die kleinen Punkte im Draht laufen, solange Strom fließt.
+
+Klick 1 bis 4: die Sätze. Klick 5: das Fachwort Induktion.
+
+Faraday war Buchbinder-Lehrling und hat sich vieles selbst beigebracht, indem er die Bücher gelesen hat, die er binden sollte.</aside>
+</section>
+
+<!-- 4 -->
+<section class="slide b1" data-steps="9">
+  <h1>Ein Blick ins Innere</h1>
+  <canvas class="scene" data-scene="inside" width="1800" height="860" style="left:60px;top:190px"></canvas>
+  <aside class="notes">Mit jedem Klick erscheint ein Bauteil, in der Reihenfolge, in der die Energie fließt:
+1 Magnet (rot Nordpol, blau Südpol)
+2 Spule aus Kupferdraht
+3 Federn an beiden Enden werfen den Magneten zurück
+4 Rohr: aus Kunststoff, weil Metall durch Wirbelströme den Magneten bremsen würde
+5 Gleichrichter aus vier Dioden
+6 Kondensator als Speicher
+7 Schalter
+8 LED
+9 Linse, zusammen mit dem Reflektor bündelt sie das Licht</aside>
+</section>
+
+<!-- 5 -->
+<section class="slide b2">
+  <h1>Was beim Schütteln passiert</h1>
+  <canvas class="scene" data-scene="shake" width="1800" height="700" style="left:60px;top:180px"></canvas>
+  <div class="steps3">
+    <span class="f"><em>1</em>Der Magnet saust durch die Spule</span>
+    <span class="f"><em>2</em>Das Magnetfeld in der Spule ändert sich</span>
+    <span class="f"><em>3</em>Dadurch entsteht eine Spannung</span>
+  </div>
+  <aside class="notes">Das ist die Kernfolie. Die Animation läuft von selbst.
+
+Die Lampe wackelt, innen fliegt der Magnet zwischen den Federn hin und her. Die Federn werden zusammengedrückt und werfen ihn zurück. Die hellblauen Linien sind sein Magnetfeld, sie fliegen mit. Jedes Mal, wenn er durch die Spule fliegt, färbt sich die Spule.
+
+Unten läuft die Spannung wie auf einem Oszilloskop mit. Bei jedem Durchflug gibt es einen Ausschlag nach oben und einen nach unten: Beim Hineinfliegen wird das Magnetfeld in der Spule stärker, beim Herausfliegen schwächer. Steht der Magnet an der Feder kurz still, ist die Spannung null.
+
+Klick 1 bis 3: die drei Schritte.</aside>
+</section>
+
+<!-- 6 -->
+<section class="slide b1">
+  <h1>Der Gleichrichter</h1>
+  <canvas class="scene" data-scene="rectifier" width="1840" height="680" style="left:40px;top:185px"></canvas>
+  <div class="steps3">
+    <span class="f"><em>1</em>Strom wechselt die Richtung</span>
+    <span class="f"><em>2</em>Dioden sind Einbahnstraßen</span>
+    <span class="f"><em>3</em>Raus kommt nur eine Richtung</span>
+  </div>
+  <aside class="notes">Links die Wechselspannung aus der Spule: mal plus, mal minus. Der weiße Punkt läuft mit.
+
+In der Mitte die vier Dioden. Immer nur zwei gegenüberliegende sind offen und leuchten, die Stromtropfen laufen durch sie hindurch. Wechselt die Spannung die Richtung, schaltet das Paar um.
+
+Achtet auf die LED in der Mitte: Durch sie läuft der Strom immer in dieselbe Richtung, von rechts nach links. Rechts die Spannung an der LED: alle Bögen zeigen nach oben. Die LED flackert aber noch im Takt. Das löst der Kondensator auf der nächsten Folie.
+
+Klick 1 bis 3: die drei Sätze.</aside>
+</section>
+
+<!-- 7 -->
+<section class="slide b2">
+  <h1>Der Kondensator sammelt</h1>
+  <canvas class="scene" data-scene="capacitor" width="1800" height="640" style="left:60px;top:185px"></canvas>
+  <div class="lines2 f" style="top:860px"><em>1</em>Beim Schütteln: viele kleine Stromstöße füllen den Speicher</div>
+  <div class="lines2 f" style="top:950px"><em>2</em>Schalter an: ruhiges Licht, auch ohne Schütteln</div>
+  <aside class="notes">Die Animation wechselt alle 6 Sekunden zwischen zwei Phasen.
+Phase 1, Schütteln: Bei jedem Durchflug des Magneten kommt ein kleiner Stromstoß. Die Punkte füllen den Kondensator Stück für Stück, wie Regentropfen einen Eimer. Schalter offen, LED aus.
+Phase 2, Schalter an: Der Magnet ruht. Der Kondensator gibt die Energie gleichmäßig an die LED ab, der Füllstand sinkt langsam.
+
+Ohne Speicher würde die LED nur beim Schütteln flackern.
+Oft werden Superkondensatoren (Goldcaps) verwendet, manchmal ein kleiner Akku.
+
+Warum eine LED? Sie braucht nur einen Bruchteil der Energie einer Glühbirne. Mit einer Glühbirne wäre der Speicher in Sekunden leer. Erst sparsame weiße LEDs haben die Schüttellampe möglich gemacht (Patent 1999).
+
+Klick 1 und 2: die zwei Sätze.</aside>
+</section>
+
+<!-- 8 -->
+<section class="slide b1">
+  <h1>Alles zusammen</h1>
+  <div class="chain">
+    <div class="grp f"><div class="w"><b>Bewegung</b><span>du schüttelst</span></div></div>
+    <div class="grp f"><div class="ar">→</div><div class="w"><b>Strom</b><span>Spule</span></div></div>
+    <div class="grp f"><div class="ar">→</div><div class="w"><b>Speicher</b><span>Kondensator</span></div></div>
+    <div class="grp f"><div class="ar">→</div><div class="w"><b class="amb">Licht</b><span>LED</span></div></div>
+  </div>
+  <div class="claim f">Energie wird nicht erzeugt, nur umgewandelt.</div>
+  <aside class="notes">Klick 1 bis 4: die Kette von der Bewegung bis zum Licht. Klick 5: der Merksatz.
+
+Zusammenfassung in einem Satz: Deine Armbewegung wird in der Spule zu Strom, der Kondensator speichert ihn, die LED macht daraus Licht. Es entsteht keine Energie aus dem Nichts.</aside>
+</section>
+
+<!-- 9 -->
+<section class="slide b2">
+  <h1>Die Formel, ganz einfach</h1>
+  <div class="formula">U = −N · ΔΦ / Δt</div>
+  <div class="sym f" style="top:430px"><b>U</b><span>Wie stark der Strom geschoben wird</span></div>
+  <div class="sym f" style="top:530px"><b>N</b><span>Wie oft der Draht herumgewickelt ist</span></div>
+  <div class="sym f" style="top:630px"><b>ΔΦ</b><span>Wie viel Magnet rein- oder rausfliegt</span></div>
+  <div class="sym f" style="top:730px"><b>Δt</b><span>Wie schnell das passiert</span></div>
+  <div class="rule f">Mehr Draht + starker Magnet + schnell schütteln = mehr Strom</div>
+  <aside class="notes">Der Magnet schubst die Elektronen im Draht an. U sagt, wie stark.
+N: Jede Windung bekommt ihren eigenen Schubs, darum hilft mehr Draht.
+ΔΦ: wie viel Magnetfeld sich in der Spule ändert.
+Δt: Je kürzer Δt, desto mehr Strom, weil man durch Δt teilt. Schnell schütteln lohnt sich.
+
+Das Minus heißt nur: Der Strom bremst den Magneten. Darum fühlt sich Schütteln schwer an, und genau diese Arbeit wird zu Strom.
+
+Klick 1 bis 4: die Buchstaben. Klick 5: die Merkregel.</aside>
+</section>
+
+<!-- 10 -->
+<section class="slide b1">
+  <h1>Wie lange schütteln?</h1>
+  <div class="stats">
+    <div class="f"><b class="amb">3 Min.</b><span>für eine volle Ladung</span></div>
+    <div class="f"><b class="cy">2 bis 3</b><span>Mal hin und her<br>pro Sekunde</span></div>
+    <div class="f"><b>0</b><span>Batterien</span></div>
+  </div>
+  <aside class="notes">Live-Demo: Jemand aus der Klasse schüttelt 30 Sekunden, dann Licht an.
+
+Das Gehäuse kann komplett dicht sein, weil keine Batterie gewechselt werden muss. Laut Patent ist die Lampe sogar explosionsgeschützt möglich.
+
+Werte aus dem webBikeWorld-Test der NightStar.</aside>
+</section>
+
+<!-- 11 -->
+<section class="slide b1">
+  <div class="center t-hero" style="top:330px;font-size:200px">Danke!</div>
+  <div class="center t-sub" style="top:620px;font-size:68px">Habt ihr Fragen?</div>
+  <aside class="notes">Vorbereitete Antworten:
+
+Warum ein Plastikrohr? Ein Metallrohr würde Wirbelströme bekommen und den Magneten bremsen.
+
+Warum keine Glühbirne? Sie braucht viel zu viel Energie, der Speicher wäre in Sekunden leer.
+
+Kann man damit ein Handy laden? Theoretisch ja, aber man müsste extrem lange schütteln.
+
+Seit wann gibt es das? Faraday hat die Induktion 1831 entdeckt, das Patent für die Schüttellampe ist von 1999. Dazwischen fehlte eine sparsame Lichtquelle: die weiße LED.</aside>
+</section>
+
+<!-- 12 -->
+<section class="slide b2">
+  <h1>Quellen</h1>
+  <div class="src">
+    <div>Vetorino, S. R.; Platt, J. V.; Springer, D. A. (1999): <i>Renewable energy flashlight.</i> US-Patent 5,975,714. <a href="https://uspto.report/patent/grant/5975714" target="_blank" rel="noopener">https://uspto.report/patent/grant/5975714</a></div>
+    <div>webBikeWorld (o. J.): <i>NightStar Magnetic Shake Flashlight.</i> <a href="https://www.webbikeworld.com/nightstar-magnetic-shake-flashlight/" target="_blank" rel="noopener">https://www.webbikeworld.com/nightstar-magnetic-shake-flashlight/</a></div>
+    <div>Encyclopaedia Britannica (o. J.): <i>Michael Faraday.</i> <a href="https://www.britannica.com/biography/Michael-Faraday" target="_blank" rel="noopener">https://www.britannica.com/biography/Michael-Faraday</a></div>
+    <div>Encyclopaedia Britannica (o. J.): <i>Faraday’s law of induction.</i> <a href="https://www.britannica.com/science/Faradays-law-of-induction" target="_blank" rel="noopener">https://www.britannica.com/science/Faradays-law-of-induction</a></div>
+  </div>
+  <div class="foot">Alle Internetquellen abgerufen am 07.11.2026. Animationen und Grafiken: eigene Darstellung mit Hilfe eines KI-Assistenten.</div>
+  <aside class="notes">Nur zum Nachlesen, nicht vorlesen.</aside>
+</section>
+
+</div>
+<div id="hint">Weiter: Klick, Leertaste oder → · Zurück: ← · Vollbild: F · Notizen: N</div>
+<div id="notesPanel" hidden><h2>Sprechernotizen</h2><div id="notesText"></div></div>
+<div id="ui">
+  <button id="bPrev" type="button" aria-label="Zurück">‹</button>
+  <span id="count">1 / 13</span>
+  <button id="bNext" type="button" aria-label="Weiter">›</button>
+  <button id="bNotes" type="button">Notizen</button>
+  <button id="bFull" type="button">Vollbild</button>
+</div>
+</div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const COL = { bg1:"#0E1220", bg2:"#151B2D", amber:"#FFB547", cyan:"#4FD1E8", text:"#F3F1EA", mute:"#B8C1D6", mute2:"#7D879E",
+  n:"#E86A5A", s:"#5B8DEF", cu1:"#C27840", cu2:"#E59A5E", tube:"#1B2238" };
+const TAU = Math.PI * 2;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const frac = v => v - Math.floor(v);
+const ease = u => (1 - Math.cos(Math.PI * clamp(u, 0, 1))) / 2;
+function hex(c) { return [parseInt(c.slice(1,3),16), parseInt(c.slice(3,5),16), parseInt(c.slice(5,7),16)]; }
+function mix(a, b, k) { const A = hex(a), B = hex(b); k = clamp(k, 0, 1);
+  return `rgb(${Math.round(A[0]+(B[0]-A[0])*k)},${Math.round(A[1]+(B[1]-A[1])*k)},${Math.round(A[2]+(B[2]-A[2])*k)})`; }
+function rgba(c, a) { const A = hex(c); return `rgba(${A[0]},${A[1]},${A[2]},${a})`; }
+function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x+r, y); ctx.arcTo(x+w, y, x+w, y+h, r); ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r); ctx.arcTo(x, y, x+w, y, r); ctx.closePath(); }
+function line(ctx, pts, color, w) { ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.stroke(); }
+function dot(ctx, x, y, r, color) { ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fillStyle = color; ctx.fill(); }
+function text(ctx, s, x, y, size, color, align = "center", bold = false) {
+  ctx.font = `${bold ? "700 " : ""}${size}px Arial, Helvetica, sans-serif`; ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = "middle"; ctx.fillText(s, x, y); }
+
+/* polyline helpers for dots travelling along wires */
+function makePath(pts) { const seg = []; let tot = 0;
+  for (let i = 0; i < pts.length - 1; i++) { const l = Math.hypot(pts[i+1][0]-pts[i][0], pts[i+1][1]-pts[i][1]); seg.push(l); tot += l; }
+  return { pts, seg, tot }; }
+function along(p, d) { d = ((d % p.tot) + p.tot) % p.tot;
+  for (let i = 0; i < p.seg.length; i++) { if (d <= p.seg[i]) { const k = d / p.seg[i];
+      return [p.pts[i][0] + (p.pts[i+1][0]-p.pts[i][0])*k, p.pts[i][1] + (p.pts[i+1][1]-p.pts[i][1])*k]; } d -= p.seg[i]; }
+  return p.pts[p.pts.length-1]; }
+
+/* bar magnet: N (red) left, S (blue) right */
+function magnet(ctx, cx, cy, w, h) {
+  ctx.fillStyle = COL.n; ctx.fillRect(cx - w/2, cy - h/2, w/2, h);
+  ctx.fillStyle = COL.s; ctx.fillRect(cx, cy - h/2, w/2, h);
+  text(ctx, "N", cx - w/4, cy + 2, h * 0.52, "#fff", "center", true);
+  text(ctx, "S", cx + w/4, cy + 2, h * 0.52, "#fff", "center", true);
+}
+
+/* real dipole field lines, integrated once, drawn as flowing dashes (N -> S) */
+function fieldLines(a, maxR) {
+  const out = [], r0 = 10, step = 3;
+  for (const ang of [0.62, 1.0, 1.45, 2.0, 2.6, -0.62, -1.0, -1.45, -2.0, -2.6]) {
+    let x = -a + r0 * Math.cos(ang), y = r0 * Math.sin(ang); const p = new Path2D(); p.moveTo(x, y);
+    for (let i = 0; i < 3000; i++) {
+      const x1 = x + a, x2 = x - a, d1 = Math.hypot(x1, y), d2 = Math.hypot(x2, y);
+      const ex = x1 / d1**3 - x2 / d2**3, ey = y / d1**3 - y / d2**3, m = Math.hypot(ex, ey);
+      x += ex / m * step; y += ey / m * step; p.lineTo(x, y);
+      if (d2 < r0 || Math.hypot(x, y) > maxR) break;
+    }
+    out.push(p);
+  }
+  return out;
+}
+function drawField(ctx, lines, cx, cy, t, alpha = 0.55) {
+  ctx.save(); ctx.translate(cx, cy); ctx.strokeStyle = rgba(COL.cyan, alpha); ctx.lineWidth = 2.5;
+  ctx.setLineDash([16, 16]); ctx.lineDashOffset = -t * 70; for (const p of lines) ctx.stroke(p); ctx.restore();
+}
+
+/* helix coil, drawn in two layers so a magnet can pass "inside" */
+function bez(p0, p1, p2, p3, s) { const u = 1 - s;
+  return [u*u*u*p0[0] + 3*u*u*s*p1[0] + 3*u*s*s*p2[0] + s*s*s*p3[0], u*u*u*p0[1] + 3*u*u*s*p1[1] + 3*u*s*s*p2[1] + s*s*s*p3[1]]; }
+function coil(ctx, o, layer) {
+  const { x0, cy, n, pitch, R, rx, heat = 0, phase = 0, I = 0, w = 10 } = o;
+  for (let i = 0; i < n; i++) {
+    const xc = x0 + i * pitch, h = pitch / 2;
+    if (layer === "back") {
+      const a = [xc + h, cy + R], b = [xc + h - rx*1.4, cy + R*0.55], c = [xc + pitch - rx*1.4, cy - R*0.55], d = [xc + pitch, cy - R];
+      ctx.beginPath(); ctx.moveTo(...a); ctx.bezierCurveTo(...b, ...c, ...d);
+      ctx.strokeStyle = mix("#6E4022", "#9C6A26", heat); ctx.lineWidth = w; ctx.lineCap = "round"; ctx.stroke();
+    } else {
+      const a = [xc, cy - R], b = [xc + rx*1.4, cy - R*0.55], c = [xc + h + rx*1.4, cy + R*0.55], d = [xc + h, cy + R];
+      ctx.beginPath(); ctx.moveTo(...a); ctx.bezierCurveTo(...b, ...c, ...d);
+      ctx.strokeStyle = mix(i % 2 ? COL.cu1 : COL.cu2, COL.amber, heat); ctx.lineWidth = w; ctx.lineCap = "round"; ctx.stroke();
+      const al = clamp(Math.abs(I) * 1.6, 0, 1);
+      if (al > 0.02) { const q = bez(a, b, c, d, frac(phase)); dot(ctx, q[0], q[1], w * 0.42, rgba("#FFFFFF", al)); }
+    }
+  }
+}
+
+function spring(ctx, x0, x1, cy, hh, color = COL.mute, n = 7) {
+  const pts = [[x0, cy]];
+  for (let i = 1; i < n * 2; i++) pts.push([x0 + (x1 - x0) * i / (n * 2), cy + (i % 2 ? -hh : hh)]);
+  pts.push([x1, cy]); line(ctx, pts, color, 4);
+}
+
+/* ---------------- scenes ---------------- */
+const scenes = {};
+
+/* Slide 3: magnet in and out of a coil, damped galvanometer */
+scenes.faraday = {
+  init(s) {
+    s.lines = fieldLines(115, 300); s.th = 0; s.om = 0; s.ph = 0; s.wd = 0;
+    const T = 4; s.T = T;
+    s.pos = u => u < .1 ? 0 : u < .4 ? ease((u - .1) / .3) : u < .6 ? 1 : u < .9 ? 1 - ease((u - .6) / .3) : 0;
+    s.xm = t => 170 + 390 * s.pos(frac(t / T));
+    s.flux = x => 1 / (1 + ((x - 560) / 120) ** 2);
+    s.cur = t => (s.flux(s.xm(t + 0.004)) - s.flux(s.xm(t - 0.004))) / 0.008;
+    let m = 0; for (let i = 0; i < 400; i++) m = Math.max(m, Math.abs(s.cur(i * T / 400))); s.imax = m;
+  },
+  draw(ctx, s, t, dt) {
+    const W = 980, H = 840, cy = 300, xm = s.xm(t), I = s.cur(t) / s.imax;
+    // needle: damped spring towards the current
+    const target = clamp(I, -1, 1) * 50 * Math.PI / 180;
+    for (let k = 0; k < 4; k++) { const h = dt / 4; s.om += (-110 * (s.th - target) - 12 * s.om) * h; s.th += s.om * h; }
+    s.ph += I * dt * 1.4; s.wd += I * dt * 170;
+    ctx.clearRect(0, 0, W, H);
+    const C = { x0: 560 - 9 * 34 / 2, cy, n: 9, pitch: 34, R: 108, rx: 22, heat: Math.abs(I), phase: s.ph, I };
+    drawField(ctx, s.lines, xm, cy, t);
+    coil(ctx, C, "back");
+    magnet(ctx, xm, cy, 300, 84);
+    coil(ctx, C, "front");
+    // leads
+    const L1 = makePath([[C.x0, cy + 104], [C.x0, 520], [430, 520], [430, 600]]);
+    const L2 = makePath([[690, 600], [690, 520], [C.x0 + 9 * 34 - 17, 520], [C.x0 + 9 * 34 - 17, cy + 104]]);
+    line(ctx, L1.pts, COL.cu2, 5); line(ctx, L2.pts, COL.cu2, 5);
+    const al = clamp(Math.abs(I) * 1.6, 0, 1);
+    if (al > .02) for (const P of [L1, L2]) for (let d = 0; d < P.tot; d += 38) { const q = along(P, d + s.wd); dot(ctx, q[0], q[1], 5, rgba("#FFFFFF", al)); }
+    // meter
+    rr(ctx, 330, 600, 460, 230, 22); ctx.fillStyle = "#0B0F1A"; ctx.fill(); ctx.strokeStyle = COL.mute2; ctx.lineWidth = 3; ctx.stroke();
+    const px = 560, py = 800, r = 150;
+    ctx.beginPath(); ctx.arc(px, py, r, -Math.PI/2 - Math.PI/3, -Math.PI/2 + Math.PI/3); ctx.strokeStyle = COL.mute; ctx.lineWidth = 4; ctx.stroke();
+    for (let a = -60; a <= 60; a += 10) { const rad = a * Math.PI / 180, big = a % 30 === 0, l = big ? 22 : 12;
+      line(ctx, [[px + (r - l) * Math.sin(rad), py - (r - l) * Math.cos(rad)], [px + r * Math.sin(rad), py - r * Math.cos(rad)]], COL.mute, big ? 4 : 2); }
+    text(ctx, "0", px, py - r - 24, 32, COL.mute);
+    text(ctx, "−", px - 0.87 * 182, py - 0.5 * 182, 40, COL.mute);
+    text(ctx, "+", px + 0.87 * 182, py - 0.5 * 182, 40, COL.mute);
+    ctx.save(); ctx.translate(px, py); ctx.rotate(s.th);
+    ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(0, -r + 10); ctx.lineTo(4, 0); ctx.closePath(); ctx.fillStyle = COL.amber; ctx.fill(); ctx.restore();
+    dot(ctx, px, py, 12, COL.text);
+  }
+};
+
+/* Slide 4: cross-section, labels revealed by click in energy order */
+scenes.inside = {
+  init(s) { s.prevStep = 0; s.changed = -10; },
+  labels: [
+    { t: "Magnet", x: 350, y: 120, from: [350, 150], to: [350, 340], box: [236, 336, 228, 108] },
+    { t: "Spule", x: 655, y: 670, from: [655, 470], to: [655, 640], box: [530, 300, 255, 180] },
+    { t: "Feder", x: 123, y: 120, from: [123, 150], to: [123, 330], box: [70, 324, 106, 132] },
+    { t: "Rohr", x: 870, y: 670, from: [870, 470], to: [870, 640], box: [56, 306, 1428, 168] },
+    { t: "Gleichrichter", x: 1120, y: 120, from: [1120, 150], to: [1120, 394], box: [1014, 386, 212, 76] },
+    { t: "Kondensator", x: 1285, y: 770, from: [1285, 462], to: [1285, 740], box: [1244, 350, 82, 116] },
+    { t: "Schalter", x: 1390, y: 120, from: [1390, 150], to: [1390, 284], box: [1336, 280, 90, 36] },
+    { t: "LED", x: 1530, y: 670, from: [1520, 410], to: [1520, 640], box: [1494, 366, 52, 52] },
+    { t: "Linse", x: 1645, y: 120, from: [1642, 150], to: [1642, 252], box: [1628, 248, 28, 284] },
+  ],
+  draw(ctx, s, t, dt, st) {
+    const W = 1800, H = 860;
+    if (st.step !== s.prevStep) { if (st.step > s.prevStep) s.changed = t; s.prevStep = st.step; }
+    ctx.clearRect(0, 0, W, H);
+    // light cone
+    ctx.beginPath(); ctx.moveTo(1654, 262); ctx.lineTo(1800, 186); ctx.lineTo(1800, 594); ctx.lineTo(1654, 518); ctx.closePath();
+    const g = ctx.createLinearGradient(1654, 0, 1800, 0); g.addColorStop(0, rgba(COL.amber, .30)); g.addColorStop(1, rgba(COL.amber, .04)); ctx.fillStyle = g; ctx.fill();
+    // tube + head
+    rr(ctx, 60, 310, 1420, 160, 34); ctx.fillStyle = COL.tube; ctx.fill(); ctx.strokeStyle = COL.mute2; ctx.lineWidth = 4; ctx.stroke();
+    rr(ctx, 1480, 240, 170, 300, 26); ctx.fillStyle = COL.tube; ctx.fill(); ctx.stroke();
+    spring(ctx, 74, 172, 390, 52); spring(ctx, 874, 972, 390, 52);
+    const C = { x0: 540, cy: 390, n: 8, pitch: 30, R: 70, rx: 16 };
+    coil(ctx, C, "back"); magnet(ctx, 350, 390, 220, 100); coil(ctx, C, "front");
+    line(ctx, [[990, 314], [990, 466]], COL.mute2, 3);
+    line(ctx, [[780, 444], [1020, 444]], COL.cu2, 4);
+    ctx.fillStyle = "#2E5E4E"; ctx.fillRect(1020, 424, 200, 34);
+    for (let i = 0; i < 4; i++) { const x = 1034 + i * 46; ctx.fillStyle = "#20242E"; ctx.fillRect(x, 398, 32, 24); ctx.fillStyle = COL.mute; ctx.fillRect(x + 22, 398, 5, 24); }
+    ctx.fillStyle = "#2F8FA3"; ctx.fillRect(1250, 366, 70, 94); ctx.beginPath(); ctx.ellipse(1285, 366, 35, 10, 0, 0, TAU); ctx.fillStyle = "#57B6C8"; ctx.fill();
+    line(ctx, [[1220, 440], [1250, 440]], COL.mute, 3); line(ctx, [[1320, 440], [1500, 440], [1500, 405]], COL.mute, 3);
+    rr(ctx, 1340, 284, 84, 28, 8); ctx.fillStyle = COL.mute; ctx.fill();
+    ctx.fillStyle = COL.mute2; ctx.fillRect(1496, 378, 12, 30);
+    ctx.beginPath(); ctx.arc(1520, 392, 18, -Math.PI/2, Math.PI/2); ctx.lineTo(1508, 410); ctx.lineTo(1508, 374); ctx.closePath(); ctx.fillStyle = COL.amber; ctx.fill();
+    line(ctx, [[1524, 368], [1632, 260]], "#C9CED8", 6); line(ctx, [[1524, 416], [1632, 524]], "#C9CED8", 6);
+    ctx.fillStyle = rgba(COL.cyan, .6); ctx.fillRect(1634, 252, 16, 284);
+    // labels
+    this.labels.forEach((L, i) => {
+      if (i >= st.step) return;
+      const fresh = i === st.step - 1, a = fresh ? clamp((t - s.changed) / 0.45, 0, 1) : 1;
+      if (fresh) { const k = clamp(1 - (t - s.changed - 0.3) / 1.6, 0, 1);
+        if (k > 0) { ctx.save(); ctx.setLineDash([10, 8]); rr(ctx, L.box[0], L.box[1], L.box[2], L.box[3], 10); ctx.strokeStyle = rgba(COL.amber, k); ctx.lineWidth = 3; ctx.stroke(); ctx.restore(); } }
+      line(ctx, [L.from, L.to], rgba(COL.mute, a), 2.5);
+      text(ctx, L.t, L.x, L.y, 50, rgba(COL.text, a));
+    });
+  }
+};
+
+/* Slide 5: shaking lamp, magnet bouncing between springs, live scope trace */
+scenes.shake = {
+  init(s) {
+    s.T = 3; s.lines = fieldLines(68, 210);
+    const LC = 190 + 72 + 85, RC = 1180 - 72 - 85; s.LC = LC; s.RC = RC;
+    s.rel = u => {
+      if (u < .06 || u >= .94) { const d = u < .06 ? u : 1 - u; return LC - 26 * Math.cos(Math.PI * d / .12); }
+      if (u < .44) return LC + (RC - LC) * ease((u - .06) / .38);
+      if (u < .56) return RC + 26 * Math.sin(Math.PI * (u - .44) / .12);
+      return RC - (RC - LC) * ease((u - .56) / .38);
+    };
+    s.phi = x => Math.exp(-(((x - 685) / 70) ** 2));
+    s.v = t => { const h = 0.003; return (s.phi(s.rel(frac((t + h) / s.T))) - s.phi(s.rel(frac((t - h) / s.T)))) / (2 * h); };
+    let m = 0; for (let i = 0; i < 900; i++) m = Math.max(m, Math.abs(s.v(i * s.T / 900))); s.vmax = m; s.ph = 0;
+  },
+  draw(ctx, s, t, dt) {
+    const W = 1800, H = 700, u = frac(t / s.T), xm = s.rel(u), V = s.v(t) / s.vmax;
+    s.ph += V * dt * 1.6;
+    ctx.clearRect(0, 0, W, H);
+    const lx = 22 * Math.cos(TAU * u), rot = 0.012 * Math.cos(TAU * u + 0.4), cy = 230;
+    ctx.save(); ctx.translate(820 + lx, cy); ctx.rotate(rot); ctx.translate(-820, -cy);
+    // shake arrow
+    const ax = 640, ay = 60;
+    ctx.beginPath(); ctx.moveTo(ax - 150, ay); ctx.lineTo(ax - 112, ay - 26); ctx.lineTo(ax - 112, ay - 10); ctx.lineTo(ax + 112, ay - 10); ctx.lineTo(ax + 112, ay - 26);
+    ctx.lineTo(ax + 150, ay); ctx.lineTo(ax + 112, ay + 26); ctx.lineTo(ax + 112, ay + 10); ctx.lineTo(ax - 112, ay + 10); ctx.lineTo(ax - 112, ay + 26); ctx.closePath();
+    ctx.fillStyle = COL.mute; ctx.fill();
+    text(ctx, "schütteln", ax + 180, ay + 2, 46, COL.mute, "left", true);
+    // body
+    rr(ctx, 180, cy - 70, 1130, 140, 30); ctx.fillStyle = COL.tube; ctx.fill();
+    drawField(ctx, s.lines, xm, cy, t, 0.5);
+    const C = { x0: 685 - 4 * 30, cy, n: 8, pitch: 30, R: 58, rx: 14, heat: Math.abs(V), phase: s.ph, I: V, w: 9 };
+    coil(ctx, C, "back");
+    spring(ctx, 192, Math.min(190 + 72, xm - 85), cy, 40);
+    spring(ctx, Math.max(1180 - 72, xm + 85), 1178, cy, 40);
+    magnet(ctx, xm, cy, 170, 64);
+    coil(ctx, C, "front");
+    rr(ctx, 180, cy - 70, 1130, 140, 30); ctx.strokeStyle = COL.mute2; ctx.lineWidth = 4; ctx.stroke();
+    line(ctx, [[1182, cy - 66], [1182, cy + 66]], COL.mute2, 3);
+    ctx.fillStyle = "#2E5E4E"; ctx.fillRect(1200, cy + 10, 90, 30);
+    rr(ctx, 1310, cy - 110, 160, 220, 24); ctx.fillStyle = COL.tube; ctx.fill(); ctx.strokeStyle = COL.mute2; ctx.lineWidth = 4; ctx.stroke();
+    dot(ctx, 1345, cy, 16, "#59607A");
+    line(ctx, [[1352, cy - 18], [1452, cy - 96]], "#C9CED8", 5); line(ctx, [[1352, cy + 18], [1452, cy + 96]], "#C9CED8", 5);
+    ctx.fillStyle = rgba(COL.cyan, .6); ctx.fillRect(1456, cy - 100, 12, 200);
+    ctx.restore();
+    // scope
+    const gx = 180, gw = 1290, gy = 540, amp = 100, sweep = s.T * 2;
+    text(ctx, "Spannung in der Spule", gx, 400, 40, COL.mute, "left");
+    ctx.strokeStyle = rgba(COL.mute2, .18); ctx.lineWidth = 1.5;
+    for (let i = 0; i <= 10; i++) { ctx.beginPath(); ctx.moveTo(gx + gw * i / 10, gy - amp - 20); ctx.lineTo(gx + gw * i / 10, gy + amp + 20); ctx.stroke(); }
+    line(ctx, [[gx, gy], [gx + gw, gy]], rgba(COL.mute2, .7), 2);
+    const t0 = Math.floor(t / sweep) * sweep, k = (t - t0) / sweep, bx = gx + gw * k;
+    const curve = (from, to, col, w) => { ctx.beginPath();
+      for (let i = 0; i <= 260; i++) { const kk = from + (to - from) * i / 260, y = gy - amp * s.v(t0 + kk * sweep) / s.vmax, x = gx + gw * kk;
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+      ctx.strokeStyle = col; ctx.lineWidth = w; ctx.lineJoin = "round"; ctx.stroke(); };
+    if (k < 0.995) curve(k, 1, rgba(COL.amber, .18), 4);
+    curve(0, k, COL.amber, 5);
+    dot(ctx, bx, gy - amp * V, 9, COL.text);
+  }
+};
+
+/* Slide 6: bridge rectifier with an LED in the middle */
+scenes.rectifier = {
+  init(s) {
+    s.T = 2.4; s.off = 0;
+    const T = [980, 170], B = [980, 550], L = [790, 360], R = [1170, 360];
+    Object.assign(s, { Tn: T, Bn: B, Ln: L, Rn: R });
+    s.pA = makePath([[560, 308], [560, 170], T, R, [1060, 360], [900, 360], L, B, [560, 550], [560, 412]]);
+    s.pB = makePath([[560, 412], [560, 550], B, R, [1060, 360], [900, 360], L, T, [560, 170], [560, 308]]);
+  },
+  diode(ctx, a, b, on) {
+    const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+    ctx.save(); ctx.translate(mx, my); ctx.rotate(ang);
+    ctx.beginPath(); ctx.moveTo(-22, -24); ctx.lineTo(-22, 24); ctx.lineTo(20, 0); ctx.closePath();
+    if (on) { ctx.fillStyle = COL.amber; ctx.fill(); } else { ctx.fillStyle = COL.bg1; ctx.fill(); ctx.strokeStyle = COL.mute2; ctx.lineWidth = 3; ctx.stroke(); }
+    ctx.fillStyle = on ? COL.amber : COL.mute2; ctx.fillRect(20, -26, 6, 52); ctx.restore();
+  },
+  draw(ctx, s, t, dt) {
+    const W = 1840, H = 680, u = frac(t / s.T), v = Math.sin(TAU * u), pos = v >= 0;
+    s.off += Math.abs(v) * dt * 520;
+    ctx.clearRect(0, 0, W, H);
+    // input graph
+    text(ctx, "Eingang: Wechselspannung", 60, 150, 40, COL.cyan, "left", true);
+    line(ctx, [[60, 360], [420, 360]], rgba(COL.mute2, .7), 2);
+    ctx.beginPath(); for (let i = 0; i <= 120; i++) { const x = 60 + 360 * i / 120, y = 360 - 110 * Math.sin(TAU * i / 120); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.strokeStyle = COL.cyan; ctx.lineWidth = 5; ctx.stroke();
+    line(ctx, [[60 + 360 * u, 230], [60 + 360 * u, 490]], rgba(COL.text, .22), 2);
+    dot(ctx, 60 + 360 * u, 360 - 110 * v, 11, COL.text);
+    // output graph
+    text(ctx, "Ausgang: Gleichspannung", 1780, 150, 40, COL.amber, "right", true);
+    line(ctx, [[1400, 430], [1780, 430]], rgba(COL.mute2, .7), 2);
+    ctx.beginPath(); for (let i = 0; i <= 120; i++) { const x = 1400 + 380 * i / 120, y = 430 - 110 * Math.abs(Math.sin(TAU * i / 120)); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.strokeStyle = COL.amber; ctx.lineWidth = 5; ctx.stroke();
+    line(ctx, [[1400 + 380 * u, 280], [1400 + 380 * u, 450]], rgba(COL.text, .22), 2);
+    dot(ctx, 1400 + 380 * u, 430 - 110 * Math.abs(v), 11, COL.text);
+    // wires
+    const { Tn, Bn, Ln, Rn } = s, wc = COL.mute2;
+    for (const P of [[[560, 308], [560, 170], Tn], [[560, 412], [560, 550], Bn], [Tn, Rn], [Rn, Bn], [Bn, Ln], [Ln, Tn], [Ln, [900, 360]], [[1060, 360], Rn]]) line(ctx, P, wc, 4);
+    for (const p of [Tn, Bn, Ln, Rn]) dot(ctx, p[0], p[1], 8, COL.mute);
+    // AC source
+    ctx.beginPath(); ctx.arc(560, 360, 52, 0, TAU); ctx.fillStyle = COL.bg1; ctx.fill(); ctx.strokeStyle = COL.cyan; ctx.lineWidth = 4; ctx.stroke();
+    ctx.beginPath(); for (let i = 0; i <= 40; i++) { const x = 530 + 60 * i / 40, y = 360 - 16 * Math.sin(TAU * i / 40); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+    ctx.strokeStyle = COL.cyan; ctx.lineWidth = 4; ctx.stroke();
+    text(ctx, pos ? "+" : "−", 600, 250, 44, COL.cyan, "center", true);
+    text(ctx, pos ? "−" : "+", 600, 470, 44, COL.cyan, "center", true);
+    // diodes (conduct toward R)
+    this.diode(ctx, Tn, Rn, pos); this.diode(ctx, Ln, Bn, pos);
+    this.diode(ctx, Bn, Rn, !pos); this.diode(ctx, Ln, Tn, !pos);
+    // LED in the middle, current always right -> left
+    const br = Math.abs(v);
+    ctx.save(); ctx.translate(980, 360);
+    ctx.beginPath(); ctx.moveTo(40, -36); ctx.lineTo(40, 36); ctx.lineTo(-30, 0); ctx.closePath();
+    ctx.fillStyle = mix("#3A4258", COL.amber, br); ctx.fill(); ctx.strokeStyle = mix(COL.mute2, COL.amber, br); ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = mix(COL.mute2, COL.amber, br); ctx.fillRect(-36, -38, 7, 76);
+    for (const dx of [-8, 22]) { ctx.save(); ctx.translate(dx, -52); ctx.rotate(-Math.PI / 4);
+      line(ctx, [[0, 0], [0, -46]], rgba(COL.amber, br), 4);
+      ctx.beginPath(); ctx.moveTo(-9, -36); ctx.lineTo(0, -50); ctx.lineTo(9, -36); ctx.strokeStyle = rgba(COL.amber, br); ctx.stroke(); ctx.restore(); }
+    ctx.restore();
+    text(ctx, "LED", 980, 440, 34, COL.mute);
+    // current drops
+    const P = pos ? s.pA : s.pB, al = clamp(br * 1.8, 0, 1);
+    for (let d = 0; d < P.tot; d += 62) { const q = along(P, d + s.off); dot(ctx, q[0], q[1], 8, rgba(COL.amber, al)); }
+  }
+};
+
+/* Slide 7: charge in bursts while shaking, steady discharge when switched on */
+scenes.capacitor = {
+  init(s) {
+    s.T = 12; s.pass = 0.75;
+    s.wire1 = makePath([[420, 330], [790, 330]]); s.wire2 = makePath([[930, 330], [1410, 330]]);
+    s.lev = 0.1; s.sw = 0;
+  },
+  draw(ctx, s, t, dt) {
+    const W = 1800, H = 640, T = s.T, tc = t % T, ph1 = tc < 6, cy = 330;
+    ctx.clearRect(0, 0, W, H);
+    // caption crossfade
+    const k1 = clamp(Math.min(tc, 6 - tc) / 0.35, 0, 1), k2 = clamp(Math.min(tc - 6, 12 - tc) / 0.35, 0, 1);
+    if (ph1) text(ctx, "Schütteln: Der Kondensator wird geladen", 900, 46, 50, rgba(COL.cyan, k1), "center", true);
+    else text(ctx, "Schalter an: Die LED leuchtet", 900, 46, 50, rgba(COL.amber, k2), "center", true);
+    // bursts: one per magnet pass during phase 1
+    const nB = Math.floor(6 / s.pass), speed = 900, perB = 5, gap = 0.07;
+    let arrived = 0, total = nB * perB, heatCoil = 0;
+    const drops = [];
+    for (let b = 0; b < nB; b++) {
+      const tb = b * s.pass + s.pass / 2;
+      heatCoil = Math.max(heatCoil, clamp(1 - Math.abs(tc - tb) / 0.18, 0, 1) * (ph1 ? 1 : 0));
+      for (let j = 0; j < perB; j++) {
+        const t0 = tb + j * gap, d = (tc - t0) * speed;
+        if (d >= s.wire1.tot) arrived += 1; else if (d > 0 && ph1) drops.push(along(s.wire1, d));
+      }
+    }
+    if (!ph1) arrived = total;
+    const full = 0.1 + 0.82 * arrived / total;
+    const level = ph1 ? full : 0.92 - 0.82 * clamp((tc - 6) / 6, 0, 1);
+    s.lev += (level - s.lev) * clamp(dt * 9, 0, 1);
+    // switch angle
+    const swT = ph1 ? 0 : clamp((tc - 6.2) / 0.4, 0, 1) * (tc > 11.7 ? clamp((12 - tc) / 0.3, 0, 1) : 1);
+    s.sw = ease(swT);
+    // generator: coil with shuttling magnet
+    const mu = frac(tc / (2 * s.pass)), mx = 240 + 150 * Math.sin(TAU * mu);
+    const C = { x0: 155, cy, n: 6, pitch: 30, R: 70, rx: 15, heat: heatCoil, I: 0 };
+    rr(ctx, 60, cy - 52, 360, 104, 22); ctx.fillStyle = COL.tube; ctx.fill(); ctx.strokeStyle = COL.mute2; ctx.lineWidth = 3; ctx.stroke();
+    coil(ctx, C, "back"); magnet(ctx, ph1 ? mx : 240 + 150 * Math.sin(TAU * frac(6 / (2 * s.pass))), cy, 120, 48); coil(ctx, C, "front");
+    // wires
+    line(ctx, [[420, cy], [790, cy]], COL.cu2, 5);
+    line(ctx, [[930, cy], [1120, cy]], COL.mute2, 5); line(ctx, [[1240, cy], [1410, cy]], COL.mute2, 5);
+    // rectifier block
+    ctx.save(); ctx.translate(590, cy); ctx.rotate(Math.PI / 4); rr(ctx, -46, -46, 92, 92, 8); ctx.fillStyle = COL.bg2; ctx.fill(); ctx.strokeStyle = COL.mute; ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
+    ctx.beginPath(); ctx.moveTo(575, cy - 18); ctx.lineTo(575, cy + 18); ctx.lineTo(605, cy); ctx.closePath(); ctx.fillStyle = COL.mute; ctx.fill(); ctx.fillRect(605, cy - 18, 5, 36);
+    // capacitor tank with liquid surface
+    const tx = 790, ty = 150, tw = 140, th = 360, ih = th - 24, lvl = ty + 12 + ih * (1 - s.lev);
+    ctx.save(); rr(ctx, tx + 10, ty + 12, tw - 20, ih, 10); ctx.clip();
+    ctx.beginPath(); ctx.moveTo(tx, ty + th);
+    for (let i = 0; i <= 24; i++) { const x = tx + tw * i / 24; ctx.lineTo(x, lvl + 4 * Math.sin(TAU * (i / 12) + t * 5) * (ph1 ? 1 : 0.4)); }
+    ctx.lineTo(tx + tw, ty + th); ctx.closePath(); ctx.fillStyle = COL.s; ctx.fill(); ctx.restore();
+    rr(ctx, tx, ty, tw, th, 18); ctx.strokeStyle = COL.mute; ctx.lineWidth = 5; ctx.stroke();
+    for (let i = 1; i < 5; i++) line(ctx, [[tx + tw - 2, ty + 12 + ih * i / 5], [tx + tw + 16, ty + 12 + ih * i / 5]], COL.mute2, 3);
+    // switch
+    dot(ctx, 1120, cy, 9, COL.mute); dot(ctx, 1240, cy, 9, COL.mute);
+    const ang = -0.6 * (1 - s.sw);
+    line(ctx, [[1120, cy], [1120 + 120 * Math.cos(ang), cy + 120 * Math.sin(ang)]], s.sw > .98 ? COL.amber : COL.mute, 7);
+    // LED + light
+    const on = ph1 ? 0 : clamp((tc - 6.6) / 0.25, 0, 1) * clamp((12 - tc) / 0.3, 0, 1);
+    if (on > 0) { ctx.beginPath(); ctx.moveTo(1500, cy - 40); ctx.lineTo(1800, cy - 170); ctx.lineTo(1800, cy + 170); ctx.lineTo(1500, cy + 40); ctx.closePath();
+      const g = ctx.createLinearGradient(1500, 0, 1800, 0); g.addColorStop(0, rgba(COL.amber, .34 * on)); g.addColorStop(1, rgba(COL.amber, 0)); ctx.fillStyle = g; ctx.fill(); }
+    ctx.beginPath(); ctx.arc(1460, cy, 52, 0, TAU); ctx.fillStyle = mix("#2A3247", COL.amber, on); ctx.fill(); ctx.strokeStyle = mix(COL.mute2, COL.amber, on); ctx.lineWidth = 4; ctx.stroke();
+    // drops
+    for (const q of drops) dot(ctx, q[0], q[1], 8, COL.amber);
+    if (!ph1 && s.sw > .98) for (let d = 0; d < s.wire2.tot; d += 58) { const q = along(s.wire2, d + (tc - 6) * 260); dot(ctx, q[0], q[1], 8, rgba(COL.amber, on)); }
+    // part names
+    for (const [n, x] of [["Spule", 240], ["Gleichrichter", 590], ["Kondensator", 860], ["Schalter", 1180], ["LED", 1460]]) text(ctx, n, x, 590, 40, COL.mute);
+  }
+};
+
+/* ---------------- deck engine ---------------- */
+const stage = document.getElementById("stage"), frame = document.getElementById("frame");
+const slides = [...stage.querySelectorAll(".slide")];
+const ui = document.getElementById("ui"), count = document.getElementById("count");
+const notesPanel = document.getElementById("notesPanel"), notesText = document.getElementById("notesText"), hint = document.getElementById("hint");
+let cur = 0, step = 0, enterT = performance.now();
+const sceneState = new Map();
+
+const frags = i => slides[i].querySelectorAll(".f");
+const steps = i => frags(i).length + (+slides[i].dataset.steps || 0);
+
+function fit() {
+  const w = frame.clientWidth, h = frame.clientHeight, k = Math.min(w / 1920, h / 1080);
+  stage.style.transform = `translate(${-960 * k}px, ${-540 * k}px) scale(${k})`;
+}
+function enter(i) {
+  cur = i; enterT = performance.now();
+  slides[i].querySelectorAll("canvas.scene").forEach(cv => { const sc = scenes[cv.dataset.scene]; const s = {}; sc.init(s); sceneState.set(cv, s); });
+}
+function render() {
+  slides.forEach((s, i) => s.classList.toggle("on", i === cur));
+  frags(cur).forEach((f, k) => f.classList.toggle("in", k < step));
+  count.textContent = `${cur + 1} / ${slides.length}`;
+  const n = slides[cur].querySelector(".notes"); notesText.textContent = n ? n.textContent.trim() : "";
+  try { history.replaceState(null, "", "#folie-" + (cur + 1)); } catch (e) {}
+}
+function next() { if (step < steps(cur)) step++; else if (cur < slides.length - 1) { enter(cur + 1); step = 0; } render(); }
+function prev() { if (step > 0) step--; else if (cur > 0) { enter(cur - 1); step = steps(cur); } render(); }
+function go(i, st = 0) { enter(clamp(i, 0, slides.length - 1)); step = st; render(); }
+
+let last = performance.now();
+function loop(now) {
+  const dt = clamp((now - last) / 1000, 0, 0.05); last = now;
+  const t = (now - enterT) / 1000;
+  slides[cur].querySelectorAll("canvas.scene").forEach(cv => {
+    const sc = scenes[cv.dataset.scene], s = sceneState.get(cv); if (!s) return;
+    sc.draw(cv.getContext("2d"), s, t, dt, { step: step - frags(cur).length >= 0 ? step : step });
+  });
+  requestAnimationFrame(loop);
+}
+
+document.addEventListener("keydown", e => {
+  if (e.altKey || e.ctrlKey || e.metaKey) return;
+  const k = e.key;
+  if (["ArrowRight", "ArrowDown", "PageDown", " ", "Enter"].includes(k)) { e.preventDefault(); next(); }
+  else if (["ArrowLeft", "ArrowUp", "PageUp", "Backspace"].includes(k)) { e.preventDefault(); prev(); }
+  else if (k === "Home") go(0); else if (k === "End") go(slides.length - 1);
+  else if (k === "f" || k === "F") toggleFull();
+  else if (k === "n" || k === "N") toggleNotes();
+});
+stage.addEventListener("click", e => { if (e.target.closest("a")) return; next(); });
+document.getElementById("bNext").addEventListener("click", next);
+document.getElementById("bPrev").addEventListener("click", prev);
+document.getElementById("bNotes").addEventListener("click", toggleNotes);
+document.getElementById("bFull").addEventListener("click", toggleFull);
+function toggleNotes() { notesPanel.hidden = !notesPanel.hidden; }
+function toggleFull() { const v = document.getElementById("viewport");
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else if (v.requestFullscreen) v.requestFullscreen().catch(() => {}); }
+let hideT; function poke() { ui.classList.add("show"); clearTimeout(hideT); hideT = setTimeout(() => ui.classList.remove("show"), 2200); }
+document.addEventListener("mousemove", poke); document.addEventListener("touchstart", poke, { passive: true });
+setTimeout(() => { hint.style.opacity = 0; }, 4500);
+window.addEventListener("resize", fit); document.addEventListener("fullscreenchange", () => setTimeout(fit, 50));
+let swipeX = null;
+stage.addEventListener("touchstart", e => { swipeX = e.touches[0].clientX; }, { passive: true });
+stage.addEventListener("touchend", e => { if (swipeX === null) return; const dx = e.changedTouches[0].clientX - swipeX; swipeX = null; if (dx > 60) { prev(); e.preventDefault(); } }, { passive: false });
+
+const m = /^#folie-(\d+)$/.exec(location.hash);
+fit(); go(m ? +m[1] - 1 : 0); requestAnimationFrame(loop);
+})();
+</script>
