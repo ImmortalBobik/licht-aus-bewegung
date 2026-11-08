@@ -97,7 +97,7 @@ b { font-weight: 700; }
 <section class="slide b1">
   <div class="center t-hero">Licht aus Bewegung</div>
   <div class="center t-sub">Aufbau und Vorgänge in einer Schütteltaschenlampe</div>
-  <aside class="notes">Echte Schüttellampe mitbringen. Ganz am Anfang wortlos schütteln, bis sie leuchtet, und erst dann anfangen zu reden.
+  <aside class="notes">Einstieg ohne Lampe: Kurz die Folie wirken lassen und fragen: Wer hat schon mal eine Taschenlampe benutzt, die man schütteln muss statt Batterien einzulegen? Hände hoch lassen.
 
 Überleitung: Heute zeige ich euch, wie aus Schütteln Licht wird.</aside>
 </section>
@@ -236,6 +236,46 @@ Das Minus heißt nur: Der Strom bremst den Magneten. Darum fühlt sich Schüttel
 Klick 1 bis 4: die Buchstaben. Klick 5: die Merkregel.</aside>
 </section>
 
+<!-- 9a -->
+<section class="slide b1">
+  <h1>Warum ist Schütteln anstrengend?</h1>
+  <canvas class="scene" data-scene="lenz" width="1800" height="660" style="left:60px;top:190px"></canvas>
+  <div class="steps3">
+    <span class="f"><em>1</em>Der Strom macht die Spule selbst zum Magneten</span>
+    <span class="f"><em>2</em>Dieser Magnet bremst den Magneten immer</span>
+    <span class="f"><em>3</em>Deine Kraft dagegen wird zu Strom</span>
+  </div>
+  <aside class="notes">Das ist das Minus aus der Formel, die Lenzsche Regel.
+
+Fließt Strom durch die Spule, wird sie selbst zu einem Magneten. Seine Pole sind immer so gerichtet, dass sie die Bewegung bremsen: Kommt der Magnet näher, stößt die Spule ihn ab (Südpol gegen Südpol). Entfernt er sich, hält die Spule ihn fest (Nordpol zieht Südpol an). Die gelbe Bremskraft zeigt immer gegen die Bewegung.
+
+Darum fühlt sich Schütteln schwer an. Genau die Kraft, mit der ihr gegen diese Bremse arbeitet, wird zu elektrischer Energie. Die LED unten leuchtet nur, solange gebremst wird.
+
+Wäre es andersherum, würde der Magnet sich selbst beschleunigen und Energie aus dem Nichts entstehen. Das geht nicht.
+
+Klick 1 bis 3: die drei Sätze.</aside>
+</section>
+
+<!-- 9b -->
+<section class="slide b2">
+  <h1>Langsam oder schnell schütteln?</h1>
+  <canvas class="scene" data-scene="speed" width="1800" height="660" style="left:60px;top:190px"></canvas>
+  <div class="steps3">
+    <span class="f"><em>1</em>Langsam: kleiner Ausschlag</span>
+    <span class="f"><em>2</em>Schnell: großer Ausschlag</span>
+    <span class="f"><em>3</em>Kürzeres Δt bedeutet mehr Spannung</span>
+  </div>
+  <aside class="notes">Ein Experiment am Bildschirm: Oben wird langsam geschüttelt, unten dreimal so schnell. Gleicher Magnet, gleiche Spule, gleicher Weg.
+
+Rechts die Spannung, wie auf einem Oszilloskop. Unten sind die Ausschläge dreimal so hoch und dafür kürzer. Die Spule färbt sich unten viel stärker.
+
+Das ist das Δt aus der Formel: Die gleiche Änderung des Magnetfelds passiert in kürzerer Zeit, also wird durch eine kleinere Zahl geteilt, und die Spannung wird größer. Doppelt so schnell schütteln bedeutet doppelte Spannung.
+
+Darum steht in der Anleitung solcher Lampen: kräftig schütteln. Gemütliches Wackeln lädt kaum.
+
+Klick 1 bis 3: die drei Sätze.</aside>
+</section>
+
 <!-- 10 -->
 <section class="slide b1">
   <h1>Wie lange schütteln?</h1>
@@ -244,7 +284,7 @@ Klick 1 bis 4: die Buchstaben. Klick 5: die Merkregel.</aside>
     <div class="f"><b class="cy">2 bis 3</b><span>Mal hin und her<br>pro Sekunde</span></div>
     <div class="f"><b>0</b><span>Batterien</span></div>
   </div>
-  <aside class="notes">Live-Demo: Jemand aus der Klasse schüttelt 30 Sekunden, dann Licht an.
+  <aside class="notes">Mitmach-Aktion statt Demo: Alle schütteln 10 Sekunden lang die Hand, als hätten sie eine Lampe darin, 2 bis 3 Mal pro Sekunde. Dann fragen: Und jetzt stellt euch vor, das 3 Minuten lang. So lange braucht eine volle Ladung.
 
 Das Gehäuse kann komplett dicht sein, weil keine Batterie gewechselt werden muss. Laut Patent ist die Lampe sogar explosionsgeschützt möglich.
 
@@ -252,7 +292,7 @@ Werte aus dem webBikeWorld-Test der NightStar.</aside>
 </section>
 
 <!-- 11 -->
-<section class="slide b1">
+<section class="slide b2">
   <div class="center t-hero" style="top:330px;font-size:200px">Danke!</div>
   <div class="center t-sub" style="top:620px;font-size:68px">Habt ihr Fragen?</div>
   <aside class="notes">Vorbereitete Antworten:
@@ -267,7 +307,7 @@ Seit wann gibt es das? Faraday hat die Induktion 1831 entdeckt, das Patent für 
 </section>
 
 <!-- 12 -->
-<section class="slide b2">
+<section class="slide b1">
   <h1>Quellen</h1>
   <div class="src">
     <div>Vetorino, S. R.; Platt, J. V.; Springer, D. A. (1999): <i>Renewable energy flashlight.</i> US-Patent 5,975,714. <a href="https://uspto.report/patent/grant/5975714" target="_blank" rel="noopener">https://uspto.report/patent/grant/5975714</a></div>
@@ -665,6 +705,92 @@ scenes.capacitor = {
     if (!ph1 && s.sw > .98) for (let d = 0; d < s.wire2.tot; d += 58) { const q = along(s.wire2, d + (tc - 6) * 260); dot(ctx, q[0], q[1], 8, rgba(COL.amber, on)); }
     // part names
     for (const [n, x] of [["Spule", 240], ["Gleichrichter", 590], ["Kondensator", 860], ["Schalter", 1180], ["LED", 1460]]) text(ctx, n, x, 590, 40, COL.mute);
+  }
+};
+
+
+/* Slide: Lenz - induced coil poles always brake the magnet */
+scenes.lenz = {
+  init(s) {
+    s.T = 4.5; s.ph = 0; s.wd = 0;
+    s.pos = u => u < .1 ? 0 : u < .4 ? ease((u - .1) / .3) : u < .6 ? 1 : u < .9 ? 1 - ease((u - .6) / .3) : 0;
+    s.xm = t => 300 + 330 * s.pos(frac(t / s.T));
+    s.flux = x => 1 / (1 + ((x + 150 - 840) / 220) ** 2);
+    s.cur = t => (s.flux(s.xm(t + .004)) - s.flux(s.xm(t - .004))) / .008;
+    let m = 0; for (let i = 0; i < 500; i++) m = Math.max(m, Math.abs(s.cur(i * s.T / 500))); s.imax = m;
+  },
+  arrow(ctx, x, y, len, color, w = 14) {
+    if (Math.abs(len) < 4) return; const d = Math.sign(len), head = Math.min(36, Math.abs(len) * .6);
+    ctx.beginPath(); ctx.moveTo(x, y - w / 2); ctx.lineTo(x + len - d * head, y - w / 2); ctx.lineTo(x + len - d * head, y - w * 1.6);
+    ctx.lineTo(x + len, y); ctx.lineTo(x + len - d * head, y + w * 1.6); ctx.lineTo(x + len - d * head, y + w / 2); ctx.lineTo(x, y + w / 2); ctx.closePath();
+    ctx.fillStyle = color; ctx.fill();
+  },
+  draw(ctx, s, t, dt) {
+    const W = 1800, H = 660, cy = 250, xm = s.xm(t), I = s.cur(t) / s.imax, a = Math.abs(I), dir = Math.sign(I);
+    s.ph += I * dt * 1.5; s.wd += I * dt * 220;
+    ctx.clearRect(0, 0, W, H);
+    const C = { x0: 840, cy, n: 9, pitch: 32, R: 110, rx: 24, heat: a, phase: s.ph, I };
+    coil(ctx, C, "back"); coil(ctx, C, "front");
+    // induced poles of the coil
+    if (a > .03) {
+      const near = dir > 0 ? "S" : "N", far = dir > 0 ? "N" : "S";
+      text(ctx, near, 790, cy, 76, rgba(near === "S" ? COL.s : COL.n, clamp(a * 1.6, 0, 1)), "center", true);
+      text(ctx, far, 1170, cy, 76, rgba(far === "S" ? COL.s : COL.n, clamp(a * 1.6, 0, 1)), "center", true);
+    }
+    magnet(ctx, xm, cy, 300, 88);
+    // motion and brake arrows
+    const vel = (s.xm(t + .02) - s.xm(t - .02)) / .04, vn = clamp(vel / 1300, -1, 1);
+    if (Math.abs(vn) > .03) {
+      this.arrow(ctx, xm, cy - 120, 170 * vn, rgba(COL.mute, clamp(Math.abs(vn) * 2, 0, 1)), 12);
+      text(ctx, "Bewegung", xm + 85 * Math.sign(vn), cy - 168, 36, rgba(COL.mute, clamp(Math.abs(vn) * 2, 0, 1)));
+    }
+    if (a > .03) {
+      this.arrow(ctx, xm, cy + 120, -190 * dir * clamp(a * 1.2, 0, 1), COL.amber, 14);
+      text(ctx, "Bremskraft", xm - 95 * dir, cy + 172, 38, rgba(COL.amber, clamp(a * 1.6, 0, 1)), "center", true);
+    }
+    // closed circuit with an LED
+    const P = makePath([[840, cy + 110], [840, 520], [1400, 520], [1400, 90], [1128, 90], [1128, cy - 110]]);
+    line(ctx, [[840, cy + 110], [840, 520], [1080, 520]], COL.cu2, 5);
+    line(ctx, [[1160, 520], [1400, 520], [1400, 90], [1128, 90], [1128, cy - 110]], COL.cu2, 5);
+    ctx.save(); ctx.translate(1120, 520);
+    ctx.beginPath(); ctx.moveTo(-36, -32); ctx.lineTo(-36, 32); ctx.lineTo(30, 0); ctx.closePath();
+    ctx.fillStyle = mix("#3A4258", COL.amber, a); ctx.fill(); ctx.strokeStyle = mix(COL.mute2, COL.amber, a); ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = mix(COL.mute2, COL.amber, a); ctx.fillRect(30, -34, 7, 68); ctx.restore();
+    text(ctx, "LED", 1120, 590, 34, COL.mute);
+    const al = clamp(a * 1.6, 0, 1);
+    if (al > .02) for (let d = 0; d < P.tot; d += 46) { const q = along(P, d + s.wd); if (Math.abs(q[0] - 1120) > 46 || Math.abs(q[1] - 520) > 4) dot(ctx, q[0], q[1], 6, rgba("#FFFFFF", al)); }
+  }
+};
+
+/* Slide: slow vs fast shaking, same stroke, different dt */
+scenes.speed = {
+  init(s) {
+    s.rows = [{ T: 3, y: 175, label: "Langsam geschüttelt" }, { T: 1, y: 495, label: "Schnell geschüttelt" }];
+    s.phi = x => Math.exp(-(((x - 400) / 60) ** 2));
+    s.x = (T, t) => 400 + 250 * Math.cos(TAU * t / T);
+    s.v = (T, t) => (s.phi(s.x(T, t + .002)) - s.phi(s.x(T, t - .002))) / .004;
+    let m = 0; for (let i = 0; i < 800; i++) m = Math.max(m, Math.abs(s.v(1, i / 800))); s.vmax = m * 1.08; s.ph = [0, 0];
+  },
+  draw(ctx, s, t, dt) {
+    ctx.clearRect(0, 0, 1800, 660);
+    s.rows.forEach((r, k) => {
+      const y = r.y, V = s.v(r.T, t) / s.vmax;
+      s.ph[k] += V * dt * 1.6;
+      text(ctx, r.label, 40, y - 108, 40, COL.mute, "left", true);
+      rr(ctx, 40, y - 58, 720, 116, 28); ctx.fillStyle = COL.tube; ctx.fill(); ctx.strokeStyle = COL.mute2; ctx.lineWidth = 4; ctx.stroke();
+      const C = { x0: 400 - 4 * 28, cy: y, n: 8, pitch: 28, R: 50, rx: 12, heat: Math.abs(V), phase: s.ph[k], I: V, w: 8 };
+      coil(ctx, C, "back"); magnet(ctx, s.x(r.T, t), y, 140, 50); coil(ctx, C, "front");
+      // rolling scope, last 3 seconds
+      const gx = 860, gw = 900, amp = 115;
+      ctx.strokeStyle = rgba(COL.mute2, .18); ctx.lineWidth = 1.5;
+      for (let i = 0; i <= 6; i++) { ctx.beginPath(); ctx.moveTo(gx + gw * i / 6, y - amp - 10); ctx.lineTo(gx + gw * i / 6, y + amp + 10); ctx.stroke(); }
+      line(ctx, [[gx, y], [gx + gw, y]], rgba(COL.mute2, .7), 2);
+      ctx.beginPath();
+      for (let i = 0; i <= 360; i++) { const tau = 3 * (1 - i / 360), yy = y - amp * s.v(r.T, t - tau) / s.vmax, xx = gx + gw * i / 360; i ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy); }
+      ctx.strokeStyle = COL.amber; ctx.lineWidth = 5; ctx.lineJoin = "round"; ctx.stroke();
+      dot(ctx, gx + gw, y - amp * V, 9, COL.text);
+    });
+    text(ctx, "Spannung in der Spule", 860, 40, 38, COL.mute, "left");
   }
 };
 
